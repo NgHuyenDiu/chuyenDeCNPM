@@ -1,0 +1,1 @@
+<%@ Application Codebehind="Global.asax.cs" Inherits="deTai1.Global_asax" Language="C#" %>
