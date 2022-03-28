@@ -8,17 +8,13 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Windows;
 
 namespace deTai1
 {
     public partial class WebForm11 : System.Web.UI.Page
-    {
-        public static List<String> listTableName = new List<string>();
-        public static List<String> listColumnName = new List<string>();
-        public static List<String> listColumnNameTemp1 = new List<string>();
-        public static List<String> listTableNameTemp1 = new List<string>();
-        public static List<String> listColumnNameTemp2 = new List<string>();
-        public static List<String> listTableNameTemp2 = new List<string>();
+    {    
+        public static List<Table> listTableQuery = new List<Table>();    
         protected void Page_Load(object sender, EventArgs e)
         {
             if (!IsPostBack)
@@ -27,14 +23,10 @@ namespace deTai1
             }
         }
 
-
         protected void CheckBoxListTable_SelectedIndexChanged(object sender, EventArgs e)
         {
             List<String> temp = new List<string>();
-
-            listTableName.Clear();
-            listTableNameTemp2.Clear();
-
+            listTableQuery.Clear();
             foreach (ListItem item in CheckBoxListColumn.Items)
             {
                 if (item.Selected)
@@ -44,19 +36,20 @@ namespace deTai1
             }
 
             CheckBoxListColumn.Items.Clear();
-            listColumnNameTemp2.Clear();
-
             foreach (ListItem item in CheckBoxListTable.Items)
             {
                 if (item.Selected)
                 {
-                    listTableName.Add(item.Text);
+                    
+                    Table tb = new Table();
+                    tb.tableName = item.Text;
+                    tb.Table_Object_id = item.Value;
+                    listTableQuery.Add(tb);
                 }
             }
-
-            for (int i = 0; i < listTableName.Count; i++)
+            for (int i = 0; i < listTableQuery.Count; i++)
             {
-                GetColumnName(listTableName[i].ToString());
+                GetColumnName(listTableQuery[i].tableName);
             }
 
             for (int i = 0; i < temp.Count; i++)
@@ -64,13 +57,6 @@ namespace deTai1
                 ListItem listItem = this.CheckBoxListColumn.Items.FindByText(temp[i].ToString());
                 if (listItem != null) listItem.Selected = true;
             }
-
-            foreach (ListItem item in CheckBoxListColumn.Items)
-            {
-                listColumnNameTemp2.Add(item.Text.ToString());
-                listTableNameTemp2.Add(item.Value.ToString());
-            }
-
         }
         private void GetTableName()
         {
@@ -114,146 +100,169 @@ namespace deTai1
 
         }
 
+
         private void GetColumnName(String tableName)
         {
             string query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + tableName + "' AND COLUMN_NAME NOT LIKE 'rowguid%'";
             SqlDataReader sdr = ExecSqlDataReader(query);
-
             while (sdr.Read())
             {
                 ListItem item = new ListItem();
-
                 item.Text = sdr["COLUMN_NAME"].ToString();
                 item.Value = tableName.ToString();
                 CheckBoxListColumn.Items.Add(item);
-
             }
-
-
-        }
-
-        public static DataTable ExecSqlDataTable(String cmd)
-        {
-            String connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
-            SqlConnection conn = new SqlConnection(connectionString);
-            conn.Open();
-            DataTable dt = new DataTable();
-            if (conn.State == ConnectionState.Closed)
-            {
-                conn.Open();
-            }
-            SqlDataAdapter da = new SqlDataAdapter(cmd, conn);
-            da.Fill(dt);
-            conn.Close();
-            return dt;
         }
 
         protected void ButtonClearColumn_Click(object sender, EventArgs e)
         {
             CheckBoxListColumn.Items.Clear();
-            listColumnName.Clear();
             GridView1.Controls.Clear();
             CheckBoxListTable.Items.Clear();
+            TextBox1.Text = "";
             this.GetTableName();
         }
 
         protected void CheckBoxListColumn_SelectedIndexChanged(object sender, EventArgs e)
         {
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Tên Cột", Type.GetType("System.String"));
+            dt.Columns.Add("Tên Bảng", Type.GetType("System.String"));
             foreach (ListItem item in CheckBoxListColumn.Items)
             {
-
                 if (item.Selected)
                 {
-                    listColumnNameTemp1.Add(item.Text.ToString());
-                    listTableNameTemp1.Add(item.Value.ToString());
+                    dt.Rows.Add(item.Text, item.Value);
                 }
             }
-
-            DataTable dt = new DataTable();
-
-            dt.Columns.Add("TenCot", Type.GetType("System.String"));
-            dt.Columns.Add("TenBang", Type.GetType("System.String"));
-
-            string[] arrTemp1 = listColumnNameTemp1.ToArray();
-            string[] arrTemp2 = listTableNameTemp1.ToArray();
-
-            for (int i = 0; i < arrTemp1.GetLength(0); i++)
-            {
-                dt.Rows.Add();
-                dt.Rows[i]["TenCot"] = arrTemp1[i];
-                dt.Rows[i]["TenBang"] = arrTemp2[i];
-            }
-            listColumnNameTemp1.Clear();
-            listTableNameTemp1.Clear();
-
             GridView1.DataSource = dt;
             GridView1.DataBind();
 
         }
+        public Boolean isAggregateFunctions()
+        {
+            Boolean result = false;
+            for (int i = 0; i < GridView1.Rows.Count; i++)
+            {
+                DropDownList suDung = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownList1");
+                if (suDung.Text.Equals("SUM") || suDung.Text.Equals("COUNT") || suDung.Text.Equals("MIN") || suDung.Text.Equals("MAX") || suDung.Text.Equals("AVG"))
+                {
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        // add list  foreign key
+        public String getForeignKey(String object_id_a, String object_id_b)
+        {
+            List<String> values = new List<string>();
+            String query= "exec sp_TimKhoaNgoai " + object_id_a + ", " + object_id_b;
+            SqlDataReader sdr = ExecSqlDataReader(query);
+            while (sdr.Read())
+            {
+                values.Add(sdr["table_name"].ToString() + "." + sdr["column_name"].ToString());
+            }
+            return String.Join("=", values);
+        }
+
+
+
 
         protected void ButtonQuery_Click(object sender, EventArgs e)
         {
-            string mess = "";
+            List<String> conditions = new List<string>();
+            string query = "";
+            query = "SELECT ";
 
-            string tableName = string.Join(", ", listTableName);
-            String columnName = "";
-            mess = "SELECT ";
-            String dk = "";
-            for (int i = 0; i < GridView1.Rows.Count; i++)
+            string tableName = "";  
+            for(int i=0; i< listTableQuery.Count; i++)
             {
-                TextBox strBang = new TextBox();
-                TextBox strCot = new TextBox();
+                tableName +=listTableQuery[i].tableName +" ";
+            }
+            tableName = tableName.Trim().Replace(" ",", ");
+            
+           
+
+            String columnName = "", condition = "",  sort = "", groupBy = "", havings="", where=""; 
+           
+            // select all column selected
+            for (int i = 0; i < GridView1.Rows.Count; i++)
+            {              
+                DropDownList sapXep = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownList2");
+                DropDownList suDung = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownList1");
+                String strBang = GridView1.Rows[i].Cells[4].Text.ToString();
+                String strCot = GridView1.Rows[i].Cells[3].Text.ToString();
                 TextBox dieuKien = (TextBox)GridView1.Rows[i].Cells[2].FindControl("TextBoxDieuKien");
+
                 if (dieuKien.Text.ToString() != "")
                 {
-                    strBang.Text = GridView1.Rows[i].Cells[4].Text;
-                    strCot.Text = GridView1.Rows[i].Cells[3].Text;
-                    dk += " AND " + strBang.Text.ToString() + "." + strCot.Text.ToString() + dieuKien.Text.ToString();
+                    condition += " AND " + dieuKien.Text.ToString();
                 }
 
-                strBang.Text = GridView1.Rows[i].Cells[4].Text;
-                strCot.Text = GridView1.Rows[i].Cells[3].Text;
-
-
-
-                columnName = strBang.Text.ToString() + "." + strCot.Text.ToString();
+                if (!suDung.Text.Equals("SELECT") && !suDung.Text.Equals("GROUP BY"))
+                {
+                    columnName += suDung.Text + "(" + strCot+ ") ";
+                }
+                else if (suDung.Text.Equals("GROUP BY"))
+                {
+                    groupBy += " " + suDung.Text + " " + strBang + "." + strCot;
+                    columnName += strBang + "." + strCot;
+                }
+                else
+                {
+                    columnName += strBang + "." + strCot;
+                }
 
                 if (i < GridView1.Rows.Count - 1)
                 {
-                    columnName += ", ";
+                    columnName += ",";
                 }
-                mess += columnName;
 
-            }
-
-            String where = "";
-            int w = 0;
-            for (int i = 0; i < listColumnNameTemp2.Count - 1; i++)
-            {
-                for (int j = i + 1; j < listColumnNameTemp2.Count; j++)
+                // sap xep
+                if (!sapXep.Text.Equals("sort"))
                 {
-                    if (listColumnNameTemp2[j] == listColumnNameTemp2[i])
-                    {
+                    sort += " ORDER BY " + strBang + "." + strCot + " " + sapXep.SelectedValue.ToString();
+                }
+            }
+            query += columnName;
+            Boolean satisfied = true;
 
-                        w++;
-                        if (w > 1)
-                        {
-                            where += " AND " + listTableNameTemp2[i].ToString() + "." + listColumnNameTemp2[i] + " = " + listTableNameTemp2[j].ToString() + "." + listColumnNameTemp2[j];
-                        }
-                        else
-                        {
-                            where += listTableNameTemp2[i].ToString() + "." + listColumnNameTemp2[i] + " = " + listTableNameTemp2[j].ToString() + "." + listColumnNameTemp2[j];
-                        }
+            if (isAggregateFunctions() == true && groupBy == "")
+            {
+                MessageBox.Show( "Vui lòng chọn group by khi thực hiện các hàm SUM, COUNT, MIN, MAX, AVG");
+                satisfied = false;
+            }
+            // dieu kien where
+            // them cac dieu kien khoa ngoại
+            if (listTableQuery.Count > 1)
+            {
+               
+                String a_id, b_id, relationship;
+                for (int i = 0; i < listTableQuery.Count - 1; i++)
+                {
+                    for (int j = i + 1; j < listTableQuery.Count; j++)
+                    {
+                        a_id = listTableQuery[i].Table_Object_id;
+                        b_id = listTableQuery[j].Table_Object_id;
+                        relationship = getForeignKey(a_id, b_id);
+                        if (!relationship.Equals(""))
+                            conditions.Add(relationship);
                     }
                 }
+                    
             }
-            if (!where.Equals(""))
+            if (conditions.Count != 0)
+                where += " where " + string.Join(" and ", conditions);
+
+            query += " FROM " + tableName + where + condition + sort + groupBy;
+
+            if (satisfied == true)
             {
-                where = " WHERE " + where;
+                TextBox1.Text = query;
+
             }
 
-            mess += " FROM " + tableName + where + dk;
-            TextBox1.Text = mess;
         }
 
         protected void btnReport_Click(object sender, EventArgs e)
@@ -266,6 +275,8 @@ namespace deTai1
             Response.Redirect("WebForm2.aspx");
             Server.Execute("WebForm2.aspx");
         }
+
+
     }
 
 }

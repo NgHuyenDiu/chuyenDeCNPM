@@ -9,12 +9,12 @@
 <body>
     <form id="form2" runat="server">
         <div id="header">
-            <asp:Label ID="LabelTitle" runat="server" style="color: #161b4e;font-size: 24px;line-height: 40px;" Text="Nhập tiêu đề báo cáo: "></asp:Label>
+            <asp:Label ID="LabelTitle" runat="server" style="color: #161b4e;font-size: 24px;line-height: 40px; margin-left: 79px;" Text="Nhập tiêu đề báo cáo: " ></asp:Label>
             <asp:TextBox ID="TextBoxNhapTieuDe" runat="server" Height="24px" Width="833px"></asp:TextBox>
             <asp:Button ID="btnReport" runat="server" Height="40px" OnClick="btnReport_Click" Text="Tạo REPORT" />
         </div>
         <div id="main">
-            <div id="table-content" style="width: 1532px; display:flex; justify-content:space-around; height: 319px;">
+            <div id="tableContent" style="width: 1532px; display:flex; justify-content:space-around; height: 319px;">
                 <asp:Panel ID="PanelChonBang" runat="server" BackColor="#78cbdb" ForeColor="#0b1215" style="margin-left: 79px" Width="399px">
                     <asp:Label ID="LabelChonBang" runat="server" style="color: #944646;font-size: 20px;" Text="Chọn TABLE cần in báo cáo: "></asp:Label>
                     <br />
@@ -38,10 +38,10 @@
                         <br />
                         <asp:TextBox ID="TextBox1" runat="server" Rows="5" TextMode="MultiLine" Width="1111px"></asp:TextBox>
             </asp:Panel>
-            <asp:Panel ID="PanelGridViewColumn" runat="server" BackColor="White" ForeColor="white" Height="367px" style=" margin-top: 25px; margin-left: 84px; margin-right:100px">
+            <asp:Panel ID="PanelGridViewColumn" runat="server" BackColor="White" ForeColor="white"  style=" margin-top: 25px; margin-left: 84px; margin-right:100px;">
                             <br />
                             <br />
-                            <asp:GridView ID="GridView1" runat="server" BackColor="white" BorderColor="#CCCCCC" BorderWidth="1px" CellPadding="3" Height="16px" style="margin-top: 0px" Width="1105px">
+                            <asp:GridView ID="GridView1" runat="server" BackColor="white" BorderColor="#CCCCCC" BorderWidth="1px" CellPadding="3" Height="16px" style="margin-top: 0px; margin-left: 0px;" Width="894px">
                                 <Columns>
                                     <asp:TemplateField>
                                         <HeaderTemplate>
@@ -49,7 +49,7 @@
                                         </HeaderTemplate>
                                         <ItemTemplate>
                                             <asp:DropDownList ID="DropDownList2" runat="server" Width="205px">
-                                                <asp:ListItem Value="sort">Chọn</asp:ListItem>
+                                                <asp:ListItem Value="sort">sort</asp:ListItem>
                                                 <asp:ListItem Value="ASC">Sắp xếp tăng dần</asp:ListItem>
                                                 <asp:ListItem Value="DESC">Sắp xếp giảm dần</asp:ListItem>
                                             </asp:DropDownList>
