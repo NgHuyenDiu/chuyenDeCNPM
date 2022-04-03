@@ -13,6 +13,7 @@ using System.Data;
 using System.Configuration;
 using System.Data.SqlClient;
 using DevExpress.XtraReports.Web;
+using System.Windows;
 
 namespace deTai1
 {
@@ -20,27 +21,35 @@ namespace deTai1
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            String qr = Session["query"].ToString();
-            String tit = Session["title"].ToString();
-            XtraReport xtraRP = new XtraReport();
-            SqlConnection cnn = new SqlConnection();
-            SqlCommand cmd = new SqlCommand();
+            try
+            {
+                String qr = Session["query"].ToString();
+                String tit = Session["title"].ToString();
+                XtraReport xtraRP = new XtraReport();
+                SqlConnection cnn = new SqlConnection();
+                SqlCommand cmd = new SqlCommand();
 
-            String connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
-            cnn.ConnectionString = connectionString;
-            cnn.Open();
-            DataSet dt = new DataSet();
+                String connectionString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
+                cnn.ConnectionString = connectionString;
+                cnn.Open();
+                DataSet dt = new DataSet();
 
-            SqlDataAdapter da = new SqlDataAdapter();
-            da.SelectCommand = new SqlCommand(qr, cnn);
-            da.Fill(dt);
-            xtraRP.DataSource = dt;
-            InitBands(xtraRP);
-            InitDetailsBaseXRTable(xtraRP, dt, tit);
+                SqlDataAdapter da = new SqlDataAdapter();
+                da.SelectCommand = new SqlCommand(qr, cnn);
+                da.Fill(dt);
+                xtraRP.DataSource = dt;
+                InitBands(xtraRP);
+                InitDetailsBaseXRTable(xtraRP, dt, tit);
 
 
-            var cachedReportSource = new CachedReportSourceWeb(xtraRP);
-            ASPxWebDocumentViewer1.OpenReport(cachedReportSource);
+                var cachedReportSource = new CachedReportSourceWeb(xtraRP);
+                ASPxWebDocumentViewer1.OpenReport(cachedReportSource);
+            }
+            catch (SqlException ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+
         }
 
         public void InitBands(XtraReport rep)
@@ -63,7 +72,7 @@ namespace deTai1
             int colWidth = (rep.PageWidth - (rep.Margins.Left + rep.Margins.Right)) / colCount;
             rep.Margins = new System.Drawing.Printing.Margins(20, 20, 20, 20);
             XRLabel title = new XRLabel();
-            title.Text = "REPORT DYNAMIC";
+            title.Text = tit;
             title.TextAlignment = DevExpress.XtraPrinting.TextAlignment.TopCenter;
             title.ForeColor = Color.Orange;
             title.Font = new Font("Tahoma", 20, FontStyle.Bold, GraphicsUnit.Pixel);

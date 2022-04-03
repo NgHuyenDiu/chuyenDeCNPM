@@ -87,15 +87,6 @@ namespace deTai1
         protected global::System.Web.UI.WebControls.Panel PanelChonCot;
 
         /// <summary>
-        /// ButtonClearColumn control.
-        /// </summary>
-        /// <remarks>
-        /// Auto-generated field.
-        /// To modify move field declaration from designer file to code-behind file.
-        /// </remarks>
-        protected global::System.Web.UI.WebControls.Button ButtonClearColumn;
-
-        /// <summary>
         /// LabelChonCot control.
         /// </summary>
         /// <remarks>
@@ -132,6 +123,15 @@ namespace deTai1
         protected global::System.Web.UI.WebControls.Button ButtonQuery;
 
         /// <summary>
+        /// ButtonClearColumn control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::System.Web.UI.WebControls.Button ButtonClearColumn;
+
+        /// <summary>
         /// TextBox1 control.
         /// </summary>
         /// <remarks>
@@ -157,5 +157,14 @@ namespace deTai1
         /// To modify move field declaration from designer file to code-behind file.
         /// </remarks>
         protected global::System.Web.UI.WebControls.GridView GridView1;
+
+        /// <summary>
+        /// ASPxGridView1 control.
+        /// </summary>
+        /// <remarks>
+        /// Auto-generated field.
+        /// To modify move field declaration from designer file to code-behind file.
+        /// </remarks>
+        protected global::DevExpress.Web.ASPxGridView ASPxGridView1;
     }
 }
