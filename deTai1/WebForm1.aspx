@@ -10,18 +10,18 @@
     <form id="form2" runat="server">
         <div id="header">
             <asp:Label ID="LabelTitle" runat="server" style="color: #161b4e;font-size: 24px;line-height: 40px; margin-left: 79px; margin-bottom: 10px;" Text="Nhập tiêu đề báo cáo: " ></asp:Label>
-            <asp:TextBox ID="TextBoxNhapTieuDe" runat="server" Height="24px" Width="833px" style="line-height: 40px;"></asp:TextBox>
+            <asp:TextBox ID="TextBoxNhapTieuDe" runat="server" Height="24px" Width="941px" style="line-height: 40px;"></asp:TextBox>
             <asp:Button ID="btnReport" runat="server" Height="40px" OnClick="btnReport_Click" style="    margin-bottom: 10px;" Text="Tạo REPORT" />
         </div>
         <div id="main">
-            <div id="tableContent" style="width: 1532px; display:flex; justify-content:space-around; height: 319px;">
-                <asp:Panel ID="PanelChonBang" runat="server" BackColor="#78cbdb" ForeColor="#0b1215" style="margin-left: 79px" Width="399px">
+            <div id="tableContent" style=" display:flex; justify-content:space-between; height: 319px;">
+                <asp:Panel ID="PanelChonBang" runat="server" BackColor="#78cbdb" ForeColor="#0b1215" style="margin-left: 79px" Width="330px">
                     <asp:Label ID="LabelChonBang" runat="server" style="color: #944646;font-size: 20px;" Text="Chọn TABLE cần in báo cáo: "></asp:Label>
                     <br />
                     <asp:CheckBoxList ID="CheckBoxListTable" runat="server" OnSelectedIndexChanged="CheckBoxListTable_SelectedIndexChanged" Width="381px">
                     </asp:CheckBoxList>
                 </asp:Panel>
-                <asp:Panel ID="PanelChonCot" runat="server" BackColor="#99ccff" ForeColor="Maroon" style=" margin-top: 0px; margin-right: 116px;" Width="913px">
+                <asp:Panel ID="PanelChonCot" runat="server" BackColor="#99ccff" ForeColor="Maroon" style=" margin-top: 0px; margin-right: 155px; min-width: 894px;" >
                     <br />
                     <asp:Label ID="LabelChonCot" runat="server" style="color: #944646;font-size: 20px;" Text="Chọn COLUMN cần in báo cáo: "></asp:Label>
                     <br />
@@ -33,13 +33,16 @@
                         
                     </asp:Panel>
             </div>
-            <asp:Panel ID="Panel1" runat="server"  style="margin-left: 79px; margin-top: 5px; ">
-                <asp:Button ID="ButtonQuery" runat="server" Height="37px" OnClick="ButtonQuery_Click" Text="Tạo QUERY" />
-                <asp:Button ID="ButtonClearColumn" runat="server" Height="37px" OnClick="ButtonClearColumn_Click" style="margin-left: 665px; margin-bottom: 5px;"  Text="CLEAR All COLUMN"  />
-                        <br />
-                        <asp:TextBox ID="TextBox1" runat="server" Rows="5" TextMode="MultiLine" Width="1111px"></asp:TextBox>
+            <asp:Panel ID="Panel1" runat="server"  style="margin-left: 79px; margin-top: 5px; margin-bottom: 10px;" >
+                <asp:Button ID="ButtonQuery0" runat="server" Height="37px" OnClick="ButtonQuery_Click" Text="Tạo QUERY" />
+                <br />
+                <asp:TextBox ID="txtQuery" runat="server" Height="89px" Rows="5" TextMode="MultiLine" Width="1261px"></asp:TextBox>
+                <br />
+                <asp:Button ID="Button1" runat="server" Height="37px" style="margin-top: 5px;" Text="XOÁ QUERY" OnClick="Button1_Click" />
+                <asp:Button ID="ButtonClearColumn" runat="server" Height="37px" OnClick="ButtonClearColumn_Click" style="margin-left: 1090px; margin-bottom: 5px;" Text="CLEAR All" />
+
             </asp:Panel>
-            <asp:Panel ID="PanelGridViewColumn" runat="server" BackColor="White" ForeColor="white"  style=" margin-top: 5px; margin-left: 84px; margin-right:100px;">
+            <asp:Panel ID="PanelGridViewColumn" runat="server" BackColor="White" ForeColor="white"  style=" margin-top: 0px; margin-left: 84px; margin-right:100px;">
                             <br />
                             <br />
                             <asp:GridView ID="GridView1" runat="server" BackColor="white" BorderColor="#CCCCCC" BorderWidth="1px" CellPadding="3" Height="16px" style="margin-top: 0px; margin-left: 0px;" Width="894px">
@@ -91,14 +94,6 @@
                                 <SortedDescendingCellStyle BackColor="#CAC9C9" />
                                 <SortedDescendingHeaderStyle BackColor="#00547E" />
                 </asp:GridView>
-                            <dx:ASPxGridView ID="ASPxGridView1" runat="server">
-                                <Templates>
-                                    <Header>
-                                        <asp:CheckBoxList ID="CheckBoxList1" runat="server" AutoPostBack="True">
-                                        </asp:CheckBoxList>
-                                    </Header>
-                                </Templates>
-                            </dx:ASPxGridView>
             </asp:Panel>
         </div>
         <div id="query-content">

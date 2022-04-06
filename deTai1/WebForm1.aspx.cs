@@ -20,7 +20,7 @@ namespace deTai1
         {
             if (!IsPostBack)
             {
-                this.GetTableName();
+                this.GetItemCheckboxListTable();
             }
         }
 
@@ -49,8 +49,7 @@ namespace deTai1
             }
 
         }
-
-        protected void CheckBoxListTable_SelectedIndexChanged(object sender, EventArgs e)
+        public List<String> getColumnChecked()
         {
             // lay cac column dang duoc check
             List<String> temp = new List<string>();
@@ -62,11 +61,20 @@ namespace deTai1
                     temp.Add(item.Text);
                 }
             }
+            return temp;
+        }
 
-            // xoa checkboxlist hien tai
-            CheckBoxListColumn.Items.Clear();
+        public void checkedListColumn(List<String> temp)
+        {
+            for (int i = 0; i < temp.Count; i++)
+            {
+                ListItem listItem = this.CheckBoxListColumn.Items.FindByText(temp[i].ToString());
+                if (listItem != null) listItem.Selected = true;
+            }
+        }
 
-            // lay danh sach table được checked
+        public void GetItemCheckboxListTableChecked()
+        {
             foreach (ListItem item in CheckBoxListTable.Items)
             {
                 if (item.Selected)
@@ -77,19 +85,69 @@ namespace deTai1
                     listTableQuery.Add(tb);
                 }
             }
+        }
+
+        public void updateConditionTableWhenTableChange()
+        {
+            for (int i = 0; i < GridView1.Rows.Count; i++)
+            {
+                Boolean has = false;
+                String TenBang = GridView1.Rows[i].Cells[4].Text.ToString();
+                for (int j = 0; j < listTableQuery.Count; j++)
+                {
+                    if (TenBang.Equals(listTableQuery[j].tableName.ToString()))
+                    {
+                        has = true;
+                        break;
+                    }
+                }
+                if (has == false)
+                {
+
+                    DataTable dttemp = getTableConditionToTemp();
+                    GridView grTemp = new GridView();
+                    grTemp.DataSource = dttemp;
+                    grTemp.DataBind();
+
+                    DataTable dt = new DataTable();
+                    dt.Columns.Add("Tên Cột", Type.GetType("System.String"));
+                    dt.Columns.Add("Tên Bảng", Type.GetType("System.String"));
+                    for (int t = 0; t < GridView1.Rows.Count; t++)
+                    {
+                        String TenCot = GridView1.Rows[t].Cells[3].Text.ToString();
+                        String Tb = GridView1.Rows[t].Cells[4].Text.ToString();
+                        dt.Rows.Add(TenCot, Tb);
+                    }
+                    dt.Rows[i].Delete();
+                    GridView1.DataSource = dt;
+                    GridView1.DataBind();
+
+                    copyConditionTempToConditionNow(grTemp);
+                    i = i - 1;
+                }
+            }
+        }
+
+        protected void CheckBoxListTable_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // lay cac column dang duoc check
+            List<String> temp = getColumnChecked();
+            // xoa checkboxlist hien tai
+            CheckBoxListColumn.Items.Clear();
+            // lay danh sach table được checked
+            GetItemCheckboxListTableChecked();
             // duyet danh sâch table duoc chon, lay danh sach column
             for (int i = 0; i < listTableQuery.Count; i++)
             {
-                Getselect(listTableQuery[i].tableName);
+                GetItemCheckboxListColumn(listTableQuery[i].tableName);
             }
             // ckeched lai nhưng item column da duoc chon truoc do
-            for (int i = 0; i < temp.Count; i++)
-            {
-                ListItem listItem = this.CheckBoxListColumn.Items.FindByText(temp[i].ToString());
-                if (listItem != null) listItem.Selected = true;
-            }
+            checkedListColumn(temp);
+            // update table condition
+            updateConditionTableWhenTableChange();
         }
-        private void GetTableName()
+
+        private void GetItemCheckboxListTable()
         {
             CheckBoxListTable.ClearSelection();
             string lenh = "SELECT name, object_id FROM QLVT_DATHANG.sys.Tables WHERE is_ms_shipped = 0 AND name != 'sysdiagrams'";
@@ -105,7 +163,7 @@ namespace deTai1
             }
         }
 
-        private void Getselect(String tableName)
+        private void GetItemCheckboxListColumn(String tableName)
         {
             string query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '" + tableName + "' AND COLUMN_NAME NOT LIKE 'rowguid%'";
             SqlDataReader sdr = ExecSqlDataReader(query);
@@ -123,8 +181,9 @@ namespace deTai1
             CheckBoxListColumn.Items.Clear();
             GridView1.Controls.Clear();
             CheckBoxListTable.Items.Clear();
-            TextBox1.Text = "";
-            this.GetTableName();
+            txtQuery.Text = "";
+            GridView1.Controls.Clear();
+            this.GetItemCheckboxListTable();
         }
         private static string HtmlToPlainText(string html)
         {
@@ -148,9 +207,8 @@ namespace deTai1
             return text;
         }
 
-        protected void CheckBoxListColumn_SelectedIndexChanged(object sender, EventArgs e)
+        public DataTable getTableConditionToTemp()
         {
-            GridView grTemp = new GridView();
             if (GridView1.Rows.Count > 0)
             {
                 DataTable temp = new DataTable();
@@ -162,19 +220,51 @@ namespace deTai1
 
                 for (int i = 0; i < GridView1.Rows.Count; i++)
                 {
-                    DropDownList sapXep = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownListSort");
-                    DropDownList suDung = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
+                    DropDownList sort = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownListSort");
+                    DropDownList use = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
                     TextBox DieuKien = (TextBox)GridView1.Rows[i].Cells[2].FindControl("TextBoxDieuKien");
                     String TenCot = GridView1.Rows[i].Cells[3].Text.ToString();
                     String TenBang = GridView1.Rows[i].Cells[4].Text.ToString();
-                    temp.Rows.Add(sapXep.SelectedIndex, suDung.SelectedIndex, DieuKien.Text.ToString(), TenCot, TenBang);
+                    temp.Rows.Add(sort.SelectedIndex, use.SelectedIndex, DieuKien.Text.ToString(), TenCot, TenBang);
                 }
-
-                grTemp.DataSource = temp;
-                grTemp.DataBind();
+                return temp;
             }
+            return null;
+        }
 
-            // them cac column dieu kien vao gridview1
+        public void copyConditionTempToConditionNow(GridView grTemp)
+        {
+            if (grTemp.Rows.Count > 0)
+            {
+                for (int i = 0; i < GridView1.Rows.Count; i++)
+                {
+                    DropDownList sort = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownListSort");
+                    DropDownList use = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
+                    TextBox dieuKien = (TextBox)GridView1.Rows[i].Cells[2].FindControl("TextBoxDieuKien");
+                    for (int j = 0; j < grTemp.Rows.Count; j++)
+                    {
+                        if (GridView1.Rows[i].Cells[3].Text.ToString().Equals(grTemp.Rows[j].Cells[3].Text.ToString()) && GridView1.Rows[i].Cells[4].Text.ToString().Equals(grTemp.Rows[j].Cells[4].Text.ToString()))
+                        {
+                            sort.SelectedIndex = int.Parse(grTemp.Rows[j].Cells[0].Text.ToString());
+                            use.SelectedIndex = int.Parse(grTemp.Rows[j].Cells[1].Text.ToString());
+                            String dk = (String)grTemp.Rows[j].Cells[2].Text.ToString();
+                            String dkText = HtmlToPlainText(dk);
+                            if (dkText.Trim() != "")
+                            {
+                                dieuKien.Text = dkText;
+                            }
+                            else
+                            {
+                                dieuKien.Text = null;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public void updateColumnConditionWhenColumnChange()
+        {
             DataTable dt = new DataTable();
             dt.Columns.Add("Tên Cột", Type.GetType("System.String"));
             dt.Columns.Add("Tên Bảng", Type.GetType("System.String"));
@@ -187,41 +277,19 @@ namespace deTai1
             }
             GridView1.DataSource = dt;
             GridView1.DataBind();
-
-            // đổ dữ liệu grTemp vào gridview1
-            if (grTemp.Rows.Count > 0)
-            {
-                for (int i = 0; i < GridView1.Rows.Count; i++)
-                {
-                    DropDownList sapXep = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownListSort");
-                    DropDownList suDung = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
-                    TextBox dieuKien = (TextBox)GridView1.Rows[i].Cells[2].FindControl("TextBoxDieuKien");
-                    for (int j = 0; j < grTemp.Rows.Count; j++)
-                    {
-                        if (GridView1.Rows[i].Cells[3].Text.ToString().Equals(grTemp.Rows[j].Cells[3].Text.ToString()) && GridView1.Rows[i].Cells[4].Text.ToString().Equals(grTemp.Rows[j].Cells[4].Text.ToString()))
-                        {
-                            sapXep.SelectedIndex = int.Parse(grTemp.Rows[j].Cells[0].Text.ToString());
-                            suDung.SelectedIndex = int.Parse(grTemp.Rows[j].Cells[1].Text.ToString());
-                            String dk = (String)grTemp.Rows[j].Cells[2].Text.ToString();
-                            String dkText = HtmlToPlainText(dk);
-                            if (dkText.Trim() != "")
-                            {
-                                dieuKien.Text = dkText;
-                            }
-                            else
-                            {
-                                dieuKien.Text = null;
-                            }
-
-
-                        }
-                    }
-
-                }
-            }
-
         }
 
+        protected void CheckBoxListColumn_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // chuyen datatable to temp de luu thong tin dieu kien
+            GridView grTemp = new GridView();
+            grTemp.DataSource = getTableConditionToTemp();
+            grTemp.DataBind();
+            // them cac column dieu kien vao gridview1
+            updateColumnConditionWhenColumnChange();
+            // đổ dữ liệu grTemp vào gridview1
+            copyConditionTempToConditionNow(grTemp);
+        }
 
         public String getForeignKey(String object_id_a, String object_id_b)
         {
@@ -235,72 +303,20 @@ namespace deTai1
             return String.Join("=", values);
         }
 
-        protected void ButtonQuery_Click(object sender, EventArgs e)
+        public String getTableNameInQuery()
         {
-
-            List<String> select = new List<string>();
-            List<String> ListUserConditions = new List<string>();
-            List<String> groupBy = new List<String>();
-            List<String> sortBy = new List<string>();
-            List<String> UserCondition = new List<string>();
-            List<String> havings = new List<string>();
-            Boolean isAggregateFunction = false;
-            DropDownList sapXep, suDung;
-            String tenBang, tenCot, where = "", query = "SELECT ";
-            TextBox dieuKien;
-
-            // lấy danh sách table 
             string tableName = "";
             for (int i = 0; i < listTableQuery.Count; i++)
             {
                 tableName += listTableQuery[i].tableName + " ";
             }
             tableName = tableName.Trim().Replace(" ", ", ");
+            return tableName;
+        }
 
-            // duyệt grid view. tạo query
-            for (int i = 0; i < GridView1.Rows.Count; i++)
-            {
-                sapXep = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownListSort");
-                suDung = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
-                dieuKien = (TextBox)GridView1.Rows[i].Cells[2].FindControl("TextBoxDieuKien");
-                tenCot = GridView1.Rows[i].Cells[3].Text.ToString();
-                tenBang = GridView1.Rows[i].Cells[4].Text.ToString();
-
-                // sap xep
-                if (!sapXep.Text.Equals("sort"))
-                {
-                    sortBy.Add(tenBang + "." + tenCot + " " + sapXep.SelectedValue.ToString());
-                }
-
-                // suDung
-                if (!suDung.Text.Equals("SELECT") && !suDung.Text.Equals("GROUP BY"))
-                {
-                    select.Add(suDung.Text + "(" + tenCot + ") ");
-                    isAggregateFunction = true;
-                    if (dieuKien.Text.ToString().Trim() != "")
-                    {
-                        havings.Add(dieuKien.Text.ToString());
-                    }
-
-
-                }
-                else if (suDung.Text.Equals("GROUP BY"))
-                {
-                    groupBy.Add(tenBang + "." + tenCot);
-                    select.Add(tenBang + "." + tenCot);
-                }
-                else
-                {
-                    select.Add(tenBang + "." + tenCot);
-                }
-
-                // điều kiện người dùng
-                if (dieuKien.Text.ToString() != "" && suDung.Text.Equals("SELECT"))
-                {
-                    UserCondition.Add(dieuKien.Text.ToString());
-                }
-            }
-
+        public List<String> getListConditionFoignKey()
+        {
+            List<String> ListConditions = new List<string>();
             // điều kiện khoá ngoại
             if (listTableQuery.Count > 1)
             {
@@ -314,23 +330,89 @@ namespace deTai1
                         relationship = getForeignKey(table_i_id, table_j_id);
                         if (!relationship.Equals(""))
                         {
-                            ListUserConditions.Add(relationship);
+                            ListConditions.Add(relationship);
                         }
 
                     }
                 }
 
             }
+            return ListConditions;
+        }
+
+        protected void ButtonQuery_Click(object sender, EventArgs e)
+        {
+
+            List<String> ListColumnInQuery = new List<string>();
+            List<String> ListConditions = new List<string>();
+            List<String> groupBy = new List<String>();
+            List<String> sortBy = new List<string>();
+            List<String> UserCondition = new List<string>();
+            List<String> havings = new List<string>();
+            Boolean isAggregateFunction = false;
+            DropDownList sort, use;
+            String tenBang, tenCot, where = "", query = "SELECT ";
+            TextBox dieuKien;
+
+            // lấy danh sách table 
+            string tableName =getTableNameInQuery();
+          
+
+            // duyệt grid view. tạo query
+            for (int i = 0; i < GridView1.Rows.Count; i++)
+            {
+                sort = (DropDownList)GridView1.Rows[i].Cells[0].FindControl("DropDownListSort");
+                use = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
+                dieuKien = (TextBox)GridView1.Rows[i].Cells[2].FindControl("TextBoxDieuKien");
+                tenCot = GridView1.Rows[i].Cells[3].Text.ToString();
+                tenBang = GridView1.Rows[i].Cells[4].Text.ToString();
+
+                // sap xep
+                if (!sort.Text.Equals("sort"))
+                {
+                    sortBy.Add(tenBang + "." + tenCot + " " + sort.SelectedValue.ToString());
+                }
+
+                // use
+                if (!use.Text.Equals("SELECT") && !use.Text.Equals("GROUP BY"))
+                {
+                    ListColumnInQuery.Add(use.Text + "(" + tenCot + ") ");
+                    isAggregateFunction = true;
+                    if (dieuKien.Text.ToString().Trim() != "")
+                    {
+                        havings.Add(dieuKien.Text.ToString());
+                    }
+
+                }
+                else if (use.Text.Equals("GROUP BY"))
+                {
+                    groupBy.Add(tenBang + "." + tenCot);
+                    ListColumnInQuery.Add(tenBang + "." + tenCot);
+                }
+                else
+                {
+                    ListColumnInQuery.Add(tenBang + "." + tenCot);
+                }
+
+                // điều kiện người dùng
+                if (dieuKien.Text.ToString() != "" && use.Text.Equals("SELECT"))
+                {
+                    UserCondition.Add(dieuKien.Text.ToString());
+                }
+            }
+
+            //lay danh sach lien ket khoa ngoai
+            ListConditions = getListConditionFoignKey();
 
             // duyet lai grid view neu co các hàm tổng hơp => lấy các column không trong hàm để group
             if (isAggregateFunction == true)
             {
                 for (int i = 0; i < GridView1.Rows.Count; i++)
                 {
-                    suDung = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
+                    use = (DropDownList)GridView1.Rows[i].Cells[1].FindControl("DropDownListUse");
                     tenBang = GridView1.Rows[i].Cells[4].Text.ToString();
                     tenCot = GridView1.Rows[i].Cells[3].Text.ToString();
-                    if (suDung.Text.Equals("SELECT"))
+                    if (use.Text.Equals("SELECT"))
                     {
                         groupBy.Add(tenBang + "." + tenCot);
                     }
@@ -339,16 +421,21 @@ namespace deTai1
             }
 
             // gộp tạo query
-            if (ListUserConditions.Count != 0)
+            if (ListConditions.Count != 0)
             {
-                where += " WHERE " + string.Join(" AND ", ListUserConditions);
+                where += " WHERE " + string.Join(" AND ", ListConditions);
             }
 
-            query += String.Join(", ", select) + " FROM " + String.Join(" AND ", tableName) + where;
-            if (UserCondition.Count > 0)
+            query += String.Join(", ", ListColumnInQuery) + " FROM " + String.Join(" AND ", tableName) + where;
+            if (UserCondition.Count > 0 && ListConditions.Count != 0)
             {
                 query += " AND " + String.Join(" AND ", UserCondition);
             }
+            else if (UserCondition.Count > 0 && ListConditions.Count == 0)
+            {
+                query += " WHERE " + String.Join(" AND ", UserCondition);
+            }
+
             if (groupBy.Count > 0)
             {
                 query += " GROUP BY " + String.Join(", ", groupBy);
@@ -361,13 +448,13 @@ namespace deTai1
             {
                 query += " ORDER BY " + String.Join(",", sortBy);
             }
-            TextBox1.Text = query;
+            txtQuery.Text = query;
 
         }
 
         protected void btnReport_Click(object sender, EventArgs e)
         {
-            String query = TextBox1.Text;
+            String query = txtQuery.Text;
             String title = TextBoxNhapTieuDe.Text;
 
             Session["query"] = query;
@@ -376,7 +463,10 @@ namespace deTai1
             Server.Execute("WebForm2.aspx");
         }
 
-
+        protected void Button1_Click(object sender, EventArgs e)
+        {
+            txtQuery.Text = "";
+        }
     }
 
 }
